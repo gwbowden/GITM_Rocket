@@ -172,15 +172,6 @@ subroutine advance_vertical(iLon,iLat,iBlock)
      nDensityS(iLon,iLat,:,iSpecies,iBlock) = exp(LogNS1(:,iSpecies))
      nDensity(iLon,iLat,:,iBlock) = nDensity(iLon,iLat,:,iBlock) + &
           nDensityS(iLon,iLat,:,iSpecies,iBlock)
-     ! Remove rocket exhaust species from density calculation (stability kludge)
-!!$     if  (UseRocketExhaust .and. &
-!!$          ((iSpecies == iH2O_) .or. &
-!!$          (iSpecies == iH2_) .or. &
-!!$          (iSpecies == iCO2_) .or. &
-!!$          (iSpecies == iCO_))) then
-!!$        NDensity(iLon,iLat,:,1:nBlocks) = NDensity(iLon,iLat,:,1:nBlocks) - &
-!!$             NDensityS(iLon,iLat,:,iSpecies,1:nBlocks)
-!!$     endif
   enddo
 
   if (UseIonAdvection) then

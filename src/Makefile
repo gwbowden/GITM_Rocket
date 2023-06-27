@@ -24,6 +24,8 @@ MODULES = \
 	ModEUV.o\
 	ModElectrodynamics.o\
 	ModSatellites.o\
+	ModRocket.o\
+	ModAcoustic.o\
 	ModLimiter.o\
 	ModTides.o\
 	ModNewell.o\
@@ -40,6 +42,8 @@ MODULES = \
 OBJECTS = \
 	planet.o\
 	satellites.o\
+	read_rocket.o\
+	read_acoustic.o\
 	calc_electron_temperature.o\
 	aurora.o\
 	get_potential.o\
@@ -75,6 +79,7 @@ OBJECTS = \
 	advance.o\
 	advance_vertical.o\
 	advance_horizontal.o\
+	oplus_flux.o\
 	set_vertical_bcs.o\
 	set_horizontal_bcs.o\
 	output.o\

@@ -873,7 +873,17 @@ subroutine calc_electron_ion_sources(iBlock,eHeatingp,iHeatingp,eHeatingm,iHeati
    dLon = Longitude(1,iBlock) - Longitude(0,iBlock)
 
   ! Electron Conductivity 
-  lame = 7.7e5*te**2.5/(1+3.22e4*te**2/ne*nn*1.e-16)  !Unit: eV cm-1 from Schunk and Nagy Page 147 eq 5.146
+  !lame = 7.7e5*te**2.5/(1+3.22e4*te**2/ne*nn*1.e-16)  !Unit: eV cm-1 from Schunk and Nagy Page 147 eq 5.146
+  if (UseImprovedElectronThermalConduction) then
+     lame = 7.7e5*te**2.5/(1+3.22e4*te**2/ne*(nn2*ElectronThermalConduction_d1*2.82e-17*(1-1.21e-4*te)*te**0.5 &
+          +no2*ElectronThermalConduction_d2*2.2e-16*(1+3.6e-2*te**0.5) &
+          +no*ElectronThermalConduction_d3*1.1e-16*(1+5.7e-4*te) &
+          +nhe*ElectronThermalConduction_d4*5.6e-16 &
+          +nh*ElectronThermalConduction_d5*5.47e-15*(1-1.35e-4*te) &
+          +nn*ElectronThermalConduction_dt*1.e-16))  !Unit: eV cm-1 from Schunk and Nagy 1978 Page 369 eq 59 (also see TIEGCM model description)
+  else
+     lame = 7.7e5*te**2.5/(1+3.22e4*te**2/ne*nn*1.e-16)  !Unit: eV cm-1 from Schunk and Nagy Page 147 eq 5.146
+  end if
   lame = lame *1.602e-19*100                      !Unit: J m-1
   
   ! Ion Conductivity 

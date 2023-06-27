@@ -1,0 +1,13 @@
+#!/bin/bash
+#PBS -l walltime=00:03:00
+#PBS -l ncpus=16
+#PBS -l mem=32GB
+#PBS -l wd
+module remove openmpi
+module load use.own 
+module load GITM # insert GITM run commands here
+date
+mpirun  -np $PBS_NCPUS ./GITM.exe  > gitm.log.$PBS_NCPUS.$PBS_JOBID 2>&1
+date
+./pGITM  > pgitm.log.$PBS_NCPUS.$PBS_JOBID 2>&1 
+

@@ -58,12 +58,6 @@ program GITM
         end do
      endif
 
-     if (UseAcousticSource) then
-        do iBlock = 1, nBlocks
-           call acoustic_source(iBlock)
-        end do
-     endif
-
      call calc_pressure
 
      !!! We may have to split cMax and Dt calculation!!!

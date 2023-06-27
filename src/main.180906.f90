@@ -53,15 +53,7 @@ program GITM
   do while (CurrentTime < EndTime)
 
      if (UseRocketExhaust) then
-        do iBlock = 1, nBlocks
-           call move_rocket(iBlock)
-        end do
-     endif
-
-     if (UseAcousticSource) then
-        do iBlock = 1, nBlocks
-           call acoustic_source(iBlock)
-        end do
+        call move_rocket
      endif
 
      call calc_pressure

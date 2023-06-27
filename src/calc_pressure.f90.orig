@@ -6,7 +6,7 @@ subroutine calc_pressure
   use ModGITM
   use ModPlanet
   use ModConstants
-  use ModInputs, ONLY: iDebugLevel, UseRocketExhaust
+  use ModInputs, ONLY: iDebugLevel
 
   implicit none
 
@@ -18,15 +18,6 @@ subroutine calc_pressure
   do iSpecies = 1, nSpecies
      NDensity(:,:,:,1:nBlocks) = &
           NDensity(:,:,:,1:nBlocks) + NDensityS(:,:,:,iSpecies,1:nBlocks)
-     ! Remove rocket exhaust species from density calculation (stability kludge)
-!!$     if  (UseRocketExhaust .and. &
-!!$          ((iSpecies == iH2O_) .or. &
-!!$          (iSpecies == iH2_) .or. &
-!!$          (iSpecies == iCO2_) .or. &
-!!$          (iSpecies == iCO_))) then
-!!$        NDensity(:,:,:,1:nBlocks) = NDensity(:,:,:,1:nBlocks) - &
-!!$             NDensityS(:,:,:,iSpecies,1:nBlocks)
-!!$     endif
   enddo
 
   Pressure    = Temperature * Rho

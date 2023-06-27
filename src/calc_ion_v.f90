@@ -143,8 +143,18 @@ subroutine calc_ion_v(iBlock)
         enddo
      enddo
 
-     VIParallel = UDotB + &
-          ( gDotB - gpDotB / IRho) / Collisions(:,:,:,iVIN_)
+     if (UseImplicitFieldAlignedMomentum) then
+
+        VIParallel = dt/(1+dt*Collisions(:,:,:,iVIN_)) * &
+             (-gpDotB / IRho + gDotB + Collisions(:,:,:,iVIN_) * UDotB + &
+             VIParallel/dt)
+
+     else
+
+        VIParallel = UDotB + &
+             ( gDotB - gpDotB / IRho) / Collisions(:,:,:,iVIN_)
+
+     endif
 
      ! Let's limit the Parallel Flow to something reasonable...
 
@@ -173,6 +183,26 @@ subroutine calc_ion_v(iBlock)
      enddo
 
   endif
+
+!  do iDir = 1, 3
+!     do iAlt = 1, nAlts 
+!        IVelocity(:,:,iAlt,iDir,iBlock) = &
+!             (IVelocity(:,:,iAlt-2,iDir,iBlock) + &
+!             IVelocity(:,:,iAlt-1,iDir,iBlock) + &
+!             IVelocity(:,:,iAlt,iDir,iBlock) + &
+!             IVelocity(:,:,iAlt+1,iDir,iBlock) + &
+!             IVelocity(:,:,iAlt+2,iDir,iBlock))/5.0
+!     enddo
+!  enddo
+!  iDir = 3
+!  do iAlt = nAlts/2, nAlts 
+!     IVelocity(:,:,iAlt,iDir,iBlock) = &
+!          (IVelocity(:,:,iAlt-2,iDir,iBlock) + &
+!          IVelocity(:,:,iAlt-1,iDir,iBlock) + &
+!          IVelocity(:,:,iAlt,iDir,iBlock) + &
+!          IVelocity(:,:,iAlt+1,iDir,iBlock) + &
+!          IVelocity(:,:,iAlt+2,iDir,iBlock))/5.0
+!  enddo
 
   IVelocity(:,:,:,:,iBlock) = min( 3000.0, IVelocity(:,:,:,:,iBlock))
   IVelocity(:,:,:,:,iBlock) = max(-3000.0, IVelocity(:,:,:,:,iBlock))

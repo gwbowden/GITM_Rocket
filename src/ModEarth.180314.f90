@@ -15,24 +15,15 @@ module ModPlanet
   integer, parameter :: iN_4S_   = 4
   integer, parameter :: iNO_     = 5
   integer, parameter :: iHe_     = 6
-  integer, parameter :: iH2O_    = 7
-  integer, parameter :: iH2_     = 8
-  integer, parameter :: iCO2_    = 9
-  
-  integer, parameter :: nSpecies = 9
+  integer, parameter :: nSpecies = 6
 
-  integer, parameter :: iN_2D_ = 10
-  integer, parameter :: iN_2P_ = 11
-  integer, parameter :: iH_    = 12
+  integer, parameter :: iN_2D_ = 7
+  integer, parameter :: iN_2P_ = 8
+  integer, parameter :: iH_    = 9
 !  integer, parameter :: iAr_  = 10
-!  integer, parameter :: iCO2_  = 13
-!  integer, parameter :: iO_1D_ = 14
-!  integer, parameter :: iCO_   = 15
-!  integer, parameter :: iOH_   = 16
-  integer, parameter :: iO_1D_ = 13
-  integer, parameter :: iCO_   = 14
-  integer, parameter :: iOH_   = 15
-  integer, parameter :: nSpeciesTotal = 15
+  integer, parameter :: iCO2_  = 10
+  integer, parameter :: iO_1D_ = 11
+  integer, parameter :: nSpeciesTotal = 11
 
   integer, parameter  :: iO_4SP_ = 1
   integer, parameter  :: iO2P_   = 2
@@ -242,62 +233,30 @@ module ModPlanet
   ! 5-Species version (Omitting Helium)
   ! Updated the N2-O based upon Massman [1998] recommended values
   ! Assumed N-He and  NO-He were the same as N2-He (just a guess)
-!!$  real, parameter, dimension(nSpecies, nSpecies) :: Diff0 = 1.0e17 * reshape( (/ &
-!!$       !-------------------------------------------+
-!!$       !   0       02      N2    N      NO     He
-!!$       !-------------------------------------------+
-!!$       0.000,   0.969,  0.969,  0.969,  0.715, 3.440, & ! O
-!!$       0.969,   0.000,  0.715,  0.969,  0.715, 3.208, & ! O2
-!!$       0.969,   0.715,  0.000,  0.969,  0.527, 2.939, & ! N2
-!!$       0.969,   0.969,  0.969,  0.000,  0.969, 2.939, & ! N
-!!$       0.715,   0.715,  0.527,  0.969,  0.000, 2.939, & ! NO
-!!$       3.440,   3.208,  2.939,  2.939,  2.939, 0.000  /), & !He
-!!$       (/nSpecies,nSpecies/) )
-!!$
-!!$
-!!$  ! These are the exponents
-!!$  real, parameter, dimension(nSpecies, nSpecies) :: DiffExp = reshape( (/ &
-!!$       !------------------------------------------+
-!!$       !   0      02   N2     N       NO      He
-!!$       !------------------------------------------+
-!!$       0.000,  0.774,  0.774, 0.774,  0.750, 0.749, &      ! O
-!!$       0.774,  0.000,  0.750, 0.774,  0.750, 0.710, &      ! O2
-!!$       0.774,  0.750,  0.000, 0.774,  0.810, 0.718, &      ! N2
-!!$       0.774,  0.774,  0.774, 0.000,  0.774, 0.718, &      ! N
-!!$       0.750,  0.750,  0.810, 0.774,  0.000, 0.718, &      ! NO
-!!$       0.749,  0.710,  0.718, 0.718,  0.718, 0.000  /), &  ! He
-!!$       (/nSpecies,nSpecies/) )
-
   real, parameter, dimension(nSpecies, nSpecies) :: Diff0 = 1.0e17 * reshape( (/ &
-       !------------------------------------------------------------------+
-       !   0       02      N2    N      NO     He     H2O     H2     CO2
-       !------------------------------------------------------------------+
-       0.000,   0.969,  0.969,  0.969,  0.715, 3.440, 1.2884, 3.8504, 0.7527, & ! O
-       0.969,   0.000,  0.715,  0.969,  0.715, 3.208, 1.0569, 2.6921, 0.6963, & ! O2
-       0.969,   0.715,  0.000,  0.969,  0.527, 2.939, 0.9049, 2.5495, 0.5632, & ! N2
-       0.969,   0.969,  0.969,  0.000,  0.969, 2.939, 1.5414, 3.9523, 0.9847, & ! N
-       0.715,   0.715,  0.527,  0.969,  0.000, 2.939, 0.7371, 2.0647, 0.4653, & ! NO
-       3.440,   3.208,  2.939,  2.939,  2.939, 0.000, 2.8750, 5.5936, 1.9622, & ! He
-       1.2884, 1.0569, 0.9049, 1.5414, 0.7371, 2.8750, 0.0000, 2.9556, 0.7227, & ! H2O
-       3.8504, 2.6921, 2.5495, 3.9523, 2.0647, 5.5936, 2.9556, 0.0000, 2.1424, & ! H2
-       0.7527, 0.6963, 0.5632, 0.9847, 0.4653, 1.9622, 0.7227, 2.1424, 0.0000/), & ! CO2
+       !-------------------------------------------+
+       !   0       02      N2    N      NO     He
+       !-------------------------------------------+
+       0.000,   0.969,  0.969,  0.969,  0.715, 3.440, & ! O
+       0.969,   0.000,  0.715,  0.969,  0.715, 3.208, & ! O2
+       0.969,   0.715,  0.000,  0.969,  0.527, 2.939, & ! N2
+       0.969,   0.969,  0.969,  0.000,  0.969, 2.939, & ! N
+       0.715,   0.715,  0.527,  0.969,  0.000, 2.939, & ! NO
+       3.440,   3.208,  2.939,  2.939,  2.939, 0.000  /), & !He
        (/nSpecies,nSpecies/) )
 
 
   ! These are the exponents
   real, parameter, dimension(nSpecies, nSpecies) :: DiffExp = reshape( (/ &
-       !-----------------------------------------------------------------+
-       !   0      02   N2     N       NO      He     H2O     H2     CO2
-       !-----------------------------------------------------------------+
-       0.000,  0.774,  0.774, 0.774,  0.750, 0.749, 0.75, 0.75, 0.75, &      ! O
-       0.774,  0.000,  0.750, 0.774,  0.750, 0.710, 0.75, 0.75, 0.75, &      ! O2
-       0.774,  0.750,  0.000, 0.774,  0.810, 0.718, 0.75, 0.75, 0.75, &      ! N2
-       0.774,  0.774,  0.774, 0.000,  0.774, 0.718, 0.75, 0.75, 0.75, &      ! N
-       0.750,  0.750,  0.810, 0.774,  0.000, 0.718, 0.75, 0.75, 0.75, &      ! NO
-       0.749,  0.710,  0.718, 0.718,  0.718, 0.000, 0.75, 0.75, 0.75, &      ! He
-       0.75,   0.75,   0.75,  0.75,   0.75,  0.75,  0.00, 0.75, 0.75, &      ! H2O
-       0.75,   0.75,   0.75,  0.75,   0.75,  0.75,  0.75, 0.00, 0.75, &      ! H2
-       0.75,   0.75,   0.75,  0.75,   0.75,  0.75,  0.75, 0.75, 0.00/), &    ! CO2
+       !------------------------------------------+
+       !   0      02   N2     N       NO      He
+       !------------------------------------------+
+       0.000,  0.774,  0.774, 0.774,  0.750, 0.749, &      ! O
+       0.774,  0.000,  0.750, 0.774,  0.750, 0.710, &      ! O2
+       0.774,  0.750,  0.000, 0.774,  0.810, 0.718, &      ! N2
+       0.774,  0.774,  0.774, 0.000,  0.774, 0.718, &      ! N
+       0.750,  0.750,  0.810, 0.774,  0.000, 0.718, &      ! NO
+       0.749,  0.710,  0.718, 0.718,  0.718, 0.000  /), &  ! He
        (/nSpecies,nSpecies/) )
 
 contains
@@ -311,17 +270,13 @@ contains
     Mass(iH_)    = 1.0 * AMU
     Mass(iHe_)   = 4.0 * AMU
     Mass(iN_4S_) = 14.0 * AMU
-    Mass(iO_3P_) = 16.0 * AMU
+    Mass(iO_3P_)  = 16.0 * AMU
     Mass(iN_2D_) = Mass(iN_4S_)
     Mass(iN_2P_) = Mass(iN_4S_)
     Mass(iN2_)   = 2*Mass(iN_4S_)
     Mass(iO2_)   = 2*Mass(iO_3P_)
-    Mass(iNO_)   = Mass(iN_4S_) + Mass(iO_3P_)
+    Mass(iNO_)   = Mass(iN_4S_)+Mass(iO_3P_)
     Mass(iCO2_)  = 12.0*AMU + 2*Mass(iO_3P_)
-    Mass(iH2O_)  = 2*Mass(iH_) + Mass(iO_3P_)
-    Mass(iOH_)   = Mass(iO_3P_) + Mass(iH_)
-    Mass(iCO_)   = Mass(iCO2_) - Mass(iO_3P_)
-    Mass(iH2_)   = 2*Mass(iH_)
 
     cSpecies(iH_)    = "H"
     cSpecies(iHe_)   = "He"
@@ -333,11 +288,7 @@ contains
     cSpecies(iN_2P_) = "N(!U2!NP)"
     cSpecies(iNO_)   = "NO"
     cSpecies(iO_1D_) = "O(!U1!ND)"
-    cSpecies(iCO2_)  = "CO!D2!N"
-    cSpecies(iH2O_)  = "H2O"
-    cSpecies(iOH_)   = "OH"
-    cSpecies(iCO_)   = "CO"
-    cSpecies(iH2_)   = "H2"
+    cSpecies(iCO2_)   = "CO!D2!N"
 !    cSpecies(iAr_)   = "Ar"
 
     cIons(iO_4SP_) = "O_4SP_!U+!N"

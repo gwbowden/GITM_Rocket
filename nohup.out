@@ -1,0 +1,20 @@
+make[1]: Entering directory `/short/n23/gwb112/GITM_180314_Mod/GITM/share/Library/src'
+make /short/n23/gwb112/GITM_180314_Mod/GITM/src/libSHARE.a
+make[2]: Entering directory `/short/n23/gwb112/GITM_180314_Mod/GITM/share/Library/src'
+ifort -module /short/n23/gwb112/GITM_180314_Mod/GITM/share/include  -c -w -diag-disable remark  -r8 -O3 -132 lapack.f
+ifort -module /short/n23/gwb112/GITM_180314_Mod/GITM/share/include  -c -w -diag-disable remark  -r8 -O3 -132 blas.f
+ifort -module /short/n23/gwb112/GITM_180314_Mod/GITM/share/include  -c -w -diag-disable remark  -r8 -O3 ModBlasLapack.f90
+ifort -module /short/n23/gwb112/GITM_180314_Mod/GITM/share/include  -c -w -diag-disable remark  -r8 -O3 ModKind.f90
+ifort -module /short/n23/gwb112/GITM_180314_Mod/GITM/share/include  -c -w -diag-disable remark  -r8 -O3 ModNumConst.f90
+ifort -module /short/n23/gwb112/GITM_180314_Mod/GITM/share/include  -c -w -diag-disable remark  -r8 -O3 ModConst.f90
+ifort -module /short/n23/gwb112/GITM_180314_Mod/GITM/share/include  -c -w -diag-disable remark  -r8 -O3 ModCoordTransform.f90
+ifort -module /short/n23/gwb112/GITM_180314_Mod/GITM/share/include  -c -w -diag-disable remark  -r8 -O3 ModExactRS.f90
+ifort -module /short/n23/gwb112/GITM_180314_Mod/GITM/share/include  -c -w -diag-disable remark  -r8 -O3 ModFreq.f90
+ifort -module /short/n23/gwb112/GITM_180314_Mod/GITM/share/include  -c -w -diag-disable remark  -r8 -O3 ModIoUnit.f90
+mpif90 -module /short/n23/gwb112/GITM_180314_Mod/GITM/share/include  -c -w -diag-disable remark  -r8 -O0 ModMpiOrig.f90
+make[2]: mpif90: Command not found
+make[2]: *** [ModMpiOrig.o] Error 127
+make[2]: Leaving directory `/short/n23/gwb112/GITM_180314_Mod/GITM/share/Library/src'
+make[1]: *** [LIB] Error 2
+make[1]: Leaving directory `/short/n23/gwb112/GITM_180314_Mod/GITM/share/Library/src'
+make: *** [GITM] Error 2

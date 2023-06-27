@@ -111,9 +111,7 @@ subroutine calc_planet_sources(iBlock)
   if (UseBarriers) call MPI_BARRIER(iCommGITM,iError)
   if (iDebugLevel > 4) write(*,*) "=====> NO cooling", iproc, UseNOCooling
 
-  if (.not. UseRocketExhaust) then
-     call calc_co2(iBlock)
-  endif
+  call calc_co2(iBlock)
 
   if (UseCO2Cooling) then
 

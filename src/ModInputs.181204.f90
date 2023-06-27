@@ -285,10 +285,6 @@ module ModInputs
   real :: tRocket = 500
   real :: maxRSqND = 1.0e12
 
-  logical ::  UseAcousticSource  = .false.
-  character (len=iCharLen_) :: cAcousticFile = "NotSet"
-  logical ::  UseSoftSource = .false.
-
   logical :: DoCheckStopFile = .true.
 
   ! AGB: Setting physical limits for ionospheric dynamics

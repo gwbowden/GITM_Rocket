@@ -10,15 +10,13 @@ subroutine calc_chemistry(iBlock)
   use ModEUV
   use ModSources
   use ModInputs, only: iDebugLevel, UseIonChemistry, UseNeutralChemistry, f107, f107a,&
-!!$       UseRocketExhaust, sigmaLon, sigmaLat, sigmaAlt
-       UseRocketExhaust, maxRSqND
+       UseRocketExhaust, sigmaLon, sigmaLat, sigmaAlt
   use ModConstants
   use ModTime, only: istep,utime,ijulianday,CurrentTime
   use EUA_ModMsis90, only: meter6, gtd6
 !  use ModRocket, only: CurrentRocketMF, CurrentRocketiLon, CurrentRocketiLat, &
 !       CurrentRocketiAlt, CurrentRocketiBlock, rlon, rlat, ralt
-  use ModRocket, only: CurrentRocketMF, CurrentRocketPos, Ha, &
-       CRocket1, CRocket2, CRocket3, CRocket4
+  use ModRocket, only: CurrentRocketMF, CurrentRocketPos
   implicit none
 
   integer, intent(in) :: iBlock
@@ -63,9 +61,7 @@ subroutine calc_chemistry(iBlock)
   real :: ionso, ionlo, neuso, neulo
 
 !  real :: rrlon, rrlat, rralt
-  real,dimension(4) :: RocketSource
-  real :: xRocket, yRocket, zRocket, SFRocket
-  integer :: iRocketSpec
+  real :: RocketMFFactor
 
   logical :: UseNeutralConstituent(nSpeciesTotal)
   logical :: UseIonConstituent(nIons)
@@ -310,22 +306,9 @@ subroutine calc_chemistry(iBlock)
            o2ptotal = 0
 
            if (UseRocketExhaust) then
-!!$              RocketMFFactor = exp(-((Longitude(iLon,iBlock)-CurrentRocketPos(1))/sigmaLon)**2 &
-!!$                   -((Latitude(iLat,iBlock)-CurrentRocketPos(2))/sigmaLat)**2 &
-!!$                   -((Altitude_GB(iLon,iLat,iAlt,iBlock)-CurrentRocketPos(3))/sigmaAlt)**2)
-              xRocket = (Longitude(iLon,iBlock)-CurrentRocketPos(1))*RadialDistance_GB(iLon,iLat,iAlt,iBlock)
-              yRocket = (Latitude(iLat,iBlock)-CurrentRocketPos(2))*RadialDistance_GB(iLon,iLat,iAlt,iBlock)
-              zRocket = Altitude_GB(iLon,iLat,iAlt,iBlock)-CurrentRocketPos(3)
-              SFRocket = exp(-zRocket/(2*Ha))
-              do iRocketSpec = 1, 4
-                 RocketSource(iRocketSpec) = CurrentRocketMF(iRocketSpec)* &
-                      exp(-zRocket*CRocket1(iRocketSpec)-(1-SFRocket)**2*CRocket2(iRocketSpec) &
-                      -CRocket3(iRocketSpec)*(xRocket**2+yRocket**2)*SFRocket &
-                      -CRocket4(iRocketSpec)/SFRocket)
-                 if (RocketSource(iRocketSpec) .gt. (maxRSqND*NDensity(iLon,iLat,iAlt,iBlock))) then
-                    RocketSource(iRocketSpec) = maxRSqND*NDensity(iLon,iLat,iAlt,iBlock)
-                 endif
-              enddo
+              RocketMFFactor = exp(-((Longitude(iLon,iBlock)-CurrentRocketPos(1))/sigmaLon)**2 &
+                   -((Latitude(iLat,iBlock)-CurrentRocketPos(2))/sigmaLat)**2 &
+                   -((Altitude_GB(iLon,iLat,iAlt,iBlock)-CurrentRocketPos(3))/sigmaAlt)**2)
            endif
 
            do while (DtTotal < Dt)
@@ -2493,14 +2476,9 @@ subroutine calc_chemistry(iBlock)
 !!$                         rrlon*rrlat*rralt*CurrentRocketMF(5)
 !!$                 endif
 
-!!$                 ChemicalHeatingSub = &
-!!$                      ChemicalHeatingSub + &
-!!$                      RocketMFFactor*CurrentRocketMF(5)
-
                  ChemicalHeatingSub = &
                       ChemicalHeatingSub + &
-                      (Mass(iH2O_)*RocketSource(1)+Mass(iH2_)*RocketSource(2)+ &
-                      Mass(iCO2_)*RocketSource(3)+Mass(iCO_)*RocketSource(4))*CurrentRocketMF(5)
+                      RocketMFFactor*CurrentRocketMF(5)
                  
               endif
               
@@ -2608,20 +2586,16 @@ subroutine calc_chemistry(iBlock)
                  if (UseRocketExhaust) then
                     select case (iNeutral)
                     case (iH2O_)
-!!$                       neuso = neuso + RocketMFFactor*CurrentRocketMF(1)
-                       neuso = neuso + RocketSource(1)
+                       neuso = neuso + RocketMFFactor*CurrentRocketMF(1)
                     case (iH2_)
-!!$                       neuso = neuso + RocketMFFactor*CurrentRocketMF(2)
-                       neuso = neuso + RocketSource(2)
+                       neuso = neuso + RocketMFFactor*CurrentRocketMF(2)
                     case (iCO2_)
-!!$                       neuso = neuso + RocketMFFactor*CurrentRocketMF(3)
-                       neuso = neuso + RocketSource(3)
+                       neuso = neuso + RocketMFFactor*CurrentRocketMF(3)
                     case (iCO_)
-!!$                       neuso = neuso + RocketMFFactor*CurrentRocketMF(4)
-                       neuso = neuso + RocketSource(4)
+                       neuso = neuso + RocketMFFactor*CurrentRocketMF(4)
                     end select
                  endif
-                 
+
                  Neutrals(iNeutral)=(Neutrals(iNeutral) + neuso * DtSub) / &
                       (1 + DtSub * neulo)
 

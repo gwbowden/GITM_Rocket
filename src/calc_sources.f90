@@ -436,7 +436,17 @@ subroutine calc_GITM_sources(iBlock)
 
   if (iDebugLevel > 4) write(*,*) "=====> Ion Velocity", iproc
   if (UseBarriers) call MPI_BARRIER(iCommGITM,iError)
-  call calc_ion_v(iBlock)
+  
+  ! If Ion Velocity Time Constant is used take weighted mean with old and new ion velocity
+  ! estimates
+  if (UseIVTC) then
+     IVelocityOld(:,:,:,:,iBlock) = IVelocity(:,:,:,:,iBlock)
+     call calc_ion_v(iBlock)
+     IVelocity(:,:,:,:,iBlock) = (dt*IVelocity(:,:,:,:,iBlock) + &
+          (IVTC-dt)*IVelocityOld(:,:,:,:,iBlock)) / IVTC
+  else
+     call calc_ion_v(iBlock)
+  end if
 
   if (iDebugLevel > 4) write(*,*) "=====> Chemistry", iproc
   if (UseBarriers) call MPI_BARRIER(iCommGITM,iError)

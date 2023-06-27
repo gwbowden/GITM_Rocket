@@ -995,24 +995,6 @@ subroutine set_inputs
               if (iError /= 0) IsDone = .true.
            endif
 
-        case ("#ACOUSTICSOURCE")
-
-           call read_in_logical(UseAcousticSource, iError)
-           call read_in_string(cAcousticFile, iError)
-           call read_in_logical(UseSoftSource, iError)
-           if (iError /= 0) then
-              write(*,*) 'Incorrect format for #ACOUSTICSOURCE'
-              write(*,*) ''
-              write(*,*) '#ACOUSTICSOURCE'
-              write(*,*) "UseAcousticSource      (logical)"
-              write(*,*) "cAcousticFile          (string)"
-              write(*,*) "UseSoftSource          (logical)"
-              IsDone = .true.
-           else
-              call read_acoustic(iError)
-              if (iError /= 0) IsDone = .true.
-           endif
-
         case ("#FIXTILT")
 
            call read_in_logical(IsFixedTilt, iError)

@@ -29,6 +29,8 @@ subroutine set_vertical_bcs(LogRho,LogNS,Vel_GD,Temp, LogINS, iVel, VertVel)
 
   use EUA_ModMsis90, ONLY: meter6
 
+  use ModEUV, only: sza
+
   implicit none
 
   real, intent(inout) :: &
@@ -83,6 +85,8 @@ subroutine set_vertical_bcs(LogRho,LogNS,Vel_GD,Temp, LogINS, iVel, VertVel)
   real :: MeshCoefm0, MeshCoefm1, &
           MeshCoefm2, MeshCoefm3, &
           MeshCoefm4
+
+  real    :: phim, lambdam, psi, FOplus
 
   !-----------------------------------------------------------
   ! Bottom
@@ -483,6 +487,17 @@ iAlt = -1
   ! Top
   !-----------------------------------------------------------
 
+  if (UseOplusFlux) then
+     ! Look up solar zenith angle
+     ! Check this is radians
+     psi = sza(iLon1D,iLat1D,iBlock1D)
+     psi = psi*180.0/pi
+     ! Calculate geomagnetic latitude
+     call GEOMAG_glow(0,Lon,Lat,phim,lambdam)
+     ! Calculate O+ flux at the top
+     call oplus_flux(lambdam,psi,FOplus)
+  endif
+
   ! Slip flow at the top
   ! Assume zero gradients in the velocities & temps
   Vel_GD(nAlts+1:nAlts+2,iEast_)  = Vel_GD(nAlts,iEast_)
@@ -507,12 +522,23 @@ iAlt = -1
 
   enddo 
 !
-  if (IVel(nAlts,iUp_) .lt. 0.0) then
-     IVel(nAlts+1,iUp_) = -1.0*IVel(nAlts,iUp_)
-     IVel(nAlts+2,iUp_) = -1.0*IVel(nAlts,iUp_)
+  if (UseOplusFlux) then
+     ! Adjust velocity to ensure correct flux for given density
+     if (UseImprovedIonAdvection) then
+        IVel(nAlts+1,iUp_)   = FOplus / (LogINS(nAlts+1,iO_4SP_) + LogINS(nAlts+1,iO_2DP_) + LogINS(nAlts+1,iO_2PP_))
+        IVel(nAlts+2,iUp_)   = FOplus / (LogINS(nAlts+2,iO_4SP_) + LogINS(nAlts+2,iO_2DP_) + LogINS(nAlts+2,iO_2PP_))
+     else
+        IVel(nAlts+1,iUp_)   = FOplus / (exp(LogINS(nAlts+1,iO_4SP_)) + exp(LogINS(nAlts+1,iO_2DP_)) + exp(LogINS(nAlts+1,iO_2PP_)))
+        IVel(nAlts+2,iUp_)   = FOplus / (exp(LogINS(nAlts+2,iO_4SP_)) + exp(LogINS(nAlts+2,iO_2DP_)) + exp(LogINS(nAlts+2,iO_2PP_)))
+     endif
   else
-     IVel(nAlts+1,iUp_) = IVel(nAlts,iUp_)
-     IVel(nAlts+2,iUp_) = IVel(nAlts,iUp_)
+     if (IVel(nAlts,iUp_) .lt. 0.0) then
+        IVel(nAlts+1,iUp_) = -1.0*IVel(nAlts,iUp_)
+        IVel(nAlts+2,iUp_) = -1.0*IVel(nAlts,iUp_)
+     else
+        IVel(nAlts+1,iUp_) = IVel(nAlts,iUp_)
+        IVel(nAlts+2,iUp_) = IVel(nAlts,iUp_)
+     endif
   endif
 
   if(Vel_GD(nAlts,iUp_) .lt. 0.0) then

@@ -9,16 +9,10 @@ subroutine calc_chemistry(iBlock)
   use ModRates
   use ModEUV
   use ModSources
-  use ModInputs, only: iDebugLevel, UseIonChemistry, UseNeutralChemistry, f107, f107a,&
-!!$       UseRocketExhaust, sigmaLon, sigmaLat, sigmaAlt
-       UseRocketExhaust, maxRSqND
+  use ModInputs, only: iDebugLevel, UseIonChemistry, UseNeutralChemistry,f107,f107a
   use ModConstants
-  use ModTime, only: istep,utime,ijulianday,CurrentTime
+  use ModTime, only: istep,utime,ijulianday
   use EUA_ModMsis90, only: meter6, gtd6
-!  use ModRocket, only: CurrentRocketMF, CurrentRocketiLon, CurrentRocketiLat, &
-!       CurrentRocketiAlt, CurrentRocketiBlock, rlon, rlat, ralt
-  use ModRocket, only: CurrentRocketMF, CurrentRocketPos, Ha, &
-       CRocket1, CRocket2, CRocket3, CRocket4
   implicit none
 
   integer, intent(in) :: iBlock
@@ -61,11 +55,6 @@ subroutine calc_chemistry(iBlock)
   real :: ti10m212, ti3m087, ti3m052, ti9m092, ti3m055, ti15m023
   real :: te3m039, te3m085, rr_opn2, te22m05, te3m091, te3m081
   real :: ionso, ionlo, neuso, neulo
-
-!  real :: rrlon, rrlat, rralt
-  real,dimension(4) :: RocketSource
-  real :: xRocket, yRocket, zRocket, SFRocket
-  integer :: iRocketSpec
 
   logical :: UseNeutralConstituent(nSpeciesTotal)
   logical :: UseIonConstituent(nIons)
@@ -308,25 +297,6 @@ subroutine calc_chemistry(iBlock)
 
            niters = 0
            o2ptotal = 0
-
-           if (UseRocketExhaust) then
-!!$              RocketMFFactor = exp(-((Longitude(iLon,iBlock)-CurrentRocketPos(1))/sigmaLon)**2 &
-!!$                   -((Latitude(iLat,iBlock)-CurrentRocketPos(2))/sigmaLat)**2 &
-!!$                   -((Altitude_GB(iLon,iLat,iAlt,iBlock)-CurrentRocketPos(3))/sigmaAlt)**2)
-              xRocket = (Longitude(iLon,iBlock)-CurrentRocketPos(1))*RadialDistance_GB(iLon,iLat,iAlt,iBlock)
-              yRocket = (Latitude(iLat,iBlock)-CurrentRocketPos(2))*RadialDistance_GB(iLon,iLat,iAlt,iBlock)
-              zRocket = Altitude_GB(iLon,iLat,iAlt,iBlock)-CurrentRocketPos(3)
-              SFRocket = exp(-zRocket/(2*Ha))
-              do iRocketSpec = 1, 4
-                 RocketSource(iRocketSpec) = CurrentRocketMF(iRocketSpec)* &
-                      exp(-zRocket*CRocket1(iRocketSpec)-(1-SFRocket)**2*CRocket2(iRocketSpec) &
-                      -CRocket3(iRocketSpec)*(xRocket**2+yRocket**2)*SFRocket &
-                      -CRocket4(iRocketSpec)/SFRocket)
-                 if (RocketSource(iRocketSpec) .gt. (maxRSqND*NDensity(iLon,iLat,iAlt,iBlock))) then
-                    RocketSource(iRocketSpec) = maxRSqND*NDensity(iLon,iLat,iAlt,iBlock)
-                 endif
-              enddo
-           endif
 
            do while (DtTotal < Dt)
               
@@ -2364,145 +2334,6 @@ subroutine calc_chemistry(iBlock)
 
               IonSources(iNOP_)   = IonSources(iNOP_)   + Reaction
               NeutralLosses(iNO_) = NeutralLosses(iNO_) + Reaction
-
-              ! ----------------------------------------------------------
-              ! Rocket Exhaust Chemistry
-              ! ----------------------------------------------------------
-              ! I treat charge exchange and recombination as a single
-              ! reaction here, based on their relative speeds, assuming 
-              ! Ions(iO_4SP_) ~ Ions(ie_)
-              ! I've ignored excited states of O here, we are mainly 
-              ! interested in O+ and e recombination, rather than 
-              ! subsequent neutral chemistry
-              if (UseRocketExhaust) then
-                 
-                 ! -------------------------------------------------------
-                 ! H2O
-                 ! -------------------------------------------------------
-                 ! --------------------------
-                 ! O+ + H2O + e -> OH + O + H
-                 !              -> H2 + 2O
-                 !              -> 2H + 2O
-                 ! --------------------------
-
-                 rr = 2.42e-15
-                 Reaction = &
-                      rr * &
-                      Neutrals(iH2O_) * &
-                      Ions(iO_4SP_)
-
-                 NeutralLosses(iH2O_) = NeutralLosses(iH2O_) + Reaction
-                 IonLosses(iO_4SP_) = IonLosses(iO_4SP_) + Reaction
-                 NeutralSources(iO_3P_) = NeutralSources(iO_3P_) + &
-                      (0.22+2*0.1+2*0.68)*Reaction
-                 NeutralSources(iH_) = NeutralSources(iH_) + &
-                      (0.22+2*0.68)*Reaction
-                 NeutralSources(iOH_) = NeutralSources(iOH_) + &
-                      (0.22)*Reaction
-                 NeutralSources(iH2_) = NeutralSources(iH2_) + &
-                      (0.1)*Reaction
-
-                 ChemicalHeatingSub = &
-                      ChemicalHeatingSub + &
-                      Reaction * (1.00+7.475*0.22+7.557*0.1+3.064*0.68)
-
-                 ! -------------------------------------------------------
-                 ! H2
-                 ! -------------------------------------------------------
-                 ! ---------------------
-                 ! O+ + H2 + e -> 2H + O
-                 ! ---------------------
-
-                 rr = 1.62e-15
-                 Reaction = &
-                      rr * &
-                      Neutrals(iH2_) * &
-                      Ions(iO_4SP_)
-
-                 NeutralLosses(iH2_) = NeutralLosses(iH2_) + Reaction
-                 IonLosses(iO_4SP_) = IonLosses(iO_4SP_) + Reaction
-                 NeutralSources(iO_3P_) = NeutralSources(iO_3P_) + Reaction
-                 NeutralSources(iH_) = NeutralSources(iH_) + 2*Reaction
-
-                 ChemicalHeatingSub = &
-                      ChemicalHeatingSub + &
-                      Reaction * (0.3581+8.769)
-
-                 ! -------------------------------------------------------
-                 ! CO2
-                 ! -------------------------------------------------------
-                 ! -----------------------
-                 ! O+ + CO2 + e -> 2O + CO
-                 ! -----------------------
-
-                 rr = 1.08e-15
-                 Reaction = &
-                      rr * &
-                      Neutrals(iCO2_) * &
-                      Ions(iO_4SP_)
-
-                 NeutralLosses(iCO2_) = NeutralLosses(iCO2_) + Reaction
-                 IonLosses(iO_4SP_) = IonLosses(iO_4SP_) + Reaction
-                 NeutralSources(iO_3P_) = NeutralSources(iO_3P_) + 2*Reaction
-                 NeutralSources(iCO_) = NeutralSources(iCO_) + Reaction
-
-                 ChemicalHeatingSub = &
-                      ChemicalHeatingSub + &
-                      Reaction * (1.208+6.924)
-                 
-                 ! Heating due to rocket exhaust plume
-!!$                 if (UseRocketExhaust) then
-!!$                    if (iBlock .eq. CurrentRocketiBlock) then
-!!$                       if (iLon .eq. CurrentRocketiLon) then
-!!$                          if (iLat .eq. CurrentRocketiLat) then
-!!$                             if (iAlt .eq. CurrentRocketiAlt) then
-!!$                                ChemicalHeatingSub = &
-!!$                                     ChemicalHeatingSub + &
-!!$                                     CurrentRocketMF(5)
-!!$                             endif
-!!$                          endif
-!!$                       endif
-!!$                    endif
-!!$                 endif
-                 
-                 
-!!$                 if (iBlock .eq. CurrentRocketiBlock) then
-!!$                    if (iLon .eq. CurrentRocketiLon) then
-!!$                       rrlon = rlon
-!!$                    elseif (iLon .eq. (CurrentRocketiLon+1)) then
-!!$                       rrlon = 1.0-rlon
-!!$                    else
-!!$                       rrlon = 0.0
-!!$                    endif
-!!$                    if (ilat .eq. CurrentRocketiLat) then
-!!$                       rrlat = rLat
-!!$                    elseif (ilat .eq. (CurrentRocketiLat+1)) then
-!!$                       rrlat = 1.0-rlat
-!!$                    else
-!!$                       rrlat = 0.0
-!!$                    endif
-!!$                    if (iAlt .eq. CurrentRocketiAlt) then
-!!$                       rralt = ralt
-!!$                    elseif (iAlt .eq. (CurrentRocketiAlt+1)) then
-!!$                       rralt = 1.0-ralt
-!!$                    else
-!!$                       rralt = 0.0
-!!$                    endif
-!!$                    ChemicalHeatingSub = &
-!!$                         ChemicalHeatingSub + &
-!!$                         rrlon*rrlat*rralt*CurrentRocketMF(5)
-!!$                 endif
-
-!!$                 ChemicalHeatingSub = &
-!!$                      ChemicalHeatingSub + &
-!!$                      RocketMFFactor*CurrentRocketMF(5)
-
-                 ChemicalHeatingSub = &
-                      ChemicalHeatingSub + &
-                      (Mass(iH2O_)*RocketSource(1)+Mass(iH2_)*RocketSource(2)+ &
-                      Mass(iCO2_)*RocketSource(3)+Mass(iCO_)*RocketSource(4))*CurrentRocketMF(5)
-                 
-              endif
               
               !---- Ions
 
@@ -2529,7 +2360,6 @@ subroutine calc_chemistry(iBlock)
                     endif
                  enddo
               endif
-
               
               ! Take Implicit time step
               Ions(ie_) = 0.0
@@ -2547,81 +2377,6 @@ subroutine calc_chemistry(iBlock)
                  neuso = NeutralSources(iNeutral)
                  neulo = NeutralLosses(iNeutral) / Neutrals(iNeutral)
 
-!!$                 if (UseRocketExhaust) then
-!!$                    if (iBlock .eq. CurrentRocketiBlock) then
-!!$                       if (iLon .eq. CurrentRocketiLon) then
-!!$                          if (iLat .eq. CurrentRocketiLat) then
-!!$                             if (iAlt .eq. CurrentRocketiAlt) then
-!!$                                if (iDebugLevel > 3) then
-!!$                                   write(*,*) "====> Rocket longitude (deg): ", 180*Longitude(iLon, iBlock)/pi
-!!$                                   write(*,*) "====> Rocket latitude (deg): ", 180*Latitude(iLat, iBlock)/pi
-!!$                                   write(*,*) "====> Rocket altitude (m): ", Altitude_GB(iLon, iLat, &
-!!$                                        iAlt, iBlock)
-!!$                                   write(*,*) "====> Rocket H2O flow rate (atoms/m/m/m/s): ", CurrentRocketMF(1)
-!!$                                   write(*,*) "====> Rocket H2 flow rate (atoms/m/m/m/s): ", CurrentRocketMF(2)
-!!$                                   write(*,*) "====> Rocket CO2 flow rate (atoms/m/m/m/s): ", CurrentRocketMF(3)
-!!$                                   write(*,*) "====> Rocket CO flow rate (atoms/m/m/m/s): ", CurrentRocketMF(4)
-!!$                                   write(*,*) "====> Rocket heating rate (eV/m/m/m/s): ", CurrentRocketMF(5)
-!!$                                end if
-!!$                                select case (iNeutral)
-!!$                                case (iH2O_)
-!!$                                   neuso = neuso + CurrentRocketMF(1)
-!!$                                case (iH2_)
-!!$                                   neuso = neuso + CurrentRocketMF(2)
-!!$                                case (iCO2_)
-!!$                                   neuso = neuso + CurrentRocketMF(3)
-!!$                                case (iCO_)
-!!$                                   neuso = neuso + CurrentRocketMF(4)
-!!$                                end select
-!!$                             endif
-!!$                          endif
-!!$                       endif
-!!$                    endif
-!!$                 endif
-
-!!$                 if (UseRocketExhaust) then
-!!$                    if (iBlock .eq. CurrentRocketiBlock) then
-!!$                       if (iDebugLevel > 3) then
-!!$                          write(*,*) "====> Rocket longitude (deg): ", 180*Longitude(iLon, iBlock)/pi
-!!$                          write(*,*) "====> Rocket latitude (deg): ", 180*Latitude(iLat, iBlock)/pi
-!!$                          write(*,*) "====> Rocket altitude (m): ", Altitude_GB(iLon, iLat, &
-!!$                               iAlt, iBlock)
-!!$                          write(*,*) "====> Rocket H2O flow rate (atoms/m/m/m/s): ", CurrentRocketMF(1)
-!!$                          write(*,*) "====> Rocket H2 flow rate (atoms/m/m/m/s): ", CurrentRocketMF(2)
-!!$                          write(*,*) "====> Rocket CO2 flow rate (atoms/m/m/m/s): ", CurrentRocketMF(3)
-!!$                          write(*,*) "====> Rocket CO flow rate (atoms/m/m/m/s): ", CurrentRocketMF(4)
-!!$                          write(*,*) "====> Rocket heating rate (eV/m/m/m/s): ", CurrentRocketMF(5)
-!!$                       end if
-!!$                       select case (iNeutral)
-!!$                       case (iH2O_)
-!!$                          neuso = neuso + rrlon*rrlat*rralt*CurrentRocketMF(1)
-!!$                       case (iH2_)
-!!$                          neuso = neuso + rrlon*rrlat*rralt*CurrentRocketMF(2)
-!!$                       case (iCO2_)
-!!$                          neuso = neuso + rrlon*rrlat*rralt*CurrentRocketMF(3)
-!!$                       case (iCO_)
-!!$                          neuso = neuso + rrlon*rrlat*rralt*CurrentRocketMF(4)
-!!$                       end select
-!!$                    endif
-!!$                 endif
-
-                 if (UseRocketExhaust) then
-                    select case (iNeutral)
-                    case (iH2O_)
-!!$                       neuso = neuso + RocketMFFactor*CurrentRocketMF(1)
-                       neuso = neuso + RocketSource(1)
-                    case (iH2_)
-!!$                       neuso = neuso + RocketMFFactor*CurrentRocketMF(2)
-                       neuso = neuso + RocketSource(2)
-                    case (iCO2_)
-!!$                       neuso = neuso + RocketMFFactor*CurrentRocketMF(3)
-                       neuso = neuso + RocketSource(3)
-                    case (iCO_)
-!!$                       neuso = neuso + RocketMFFactor*CurrentRocketMF(4)
-                       neuso = neuso + RocketSource(4)
-                    end select
-                 endif
-                 
                  Neutrals(iNeutral)=(Neutrals(iNeutral) + neuso * DtSub) / &
                       (1 + DtSub * neulo)
 

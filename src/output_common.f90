@@ -55,6 +55,9 @@ integer function bad_outputtype()
      if (OutputType(iOutputType) == '1DCMS')     IsFound = .true.
      if (OutputType(iOutputType) == '1DUSR')     IsFound = .true.
 
+     if (OutputType(iOutputType) == '3DTHN')     IsFound = .true.
+     if (OutputType(iOutputType) == '1DTHN')     IsFound = .true.
+
      if (.not. IsFound) then
         bad_outputtype = iOutputType
         return
@@ -373,6 +376,17 @@ subroutine output(dir, iBlock, iOutputType)
      nvars_to_write = 15 + nSpeciesTotal + nSpecies + nIons + nSpecies
      call output_1dnew(iiLon, iiLat, iBlock, rLon, rLat, iOutputUnit_)
 
+  case ('3DTHN')
+
+     nvars_to_write = 14
+     call output_3dthn(iBlock)
+
+  case ('1DTHN')
+
+     nGCs = 0
+     nvars_to_write = 14 + (nspeciestotal*2)
+     call output_1dthn
+
   end select
 
   close(unit=iOutputUnit_)
@@ -582,7 +596,7 @@ contains
 
     endif
     
-    if (cType(3:5) == "THM") then
+    if ((cType(3:5) == "THM") .OR. (cType(3:5) == "THN")) then
 
        write(iOutputUnit_,"(I7,A1,a)")  4, " ", "EUV Heating"
        write(iOutputUnit_,"(I7,A1,a)")  5, " ", "Conduction"
@@ -597,11 +611,11 @@ contains
        write(iOutputUnit_,"(I7,A1,a)")  14, " ", "Total Abs EUV"
        if (cType(1:2) == "1D") then
           do iSpecies = 1, nSpeciesTotal
-             write(iOutputUnit_,"(I7,A1,a,a)") 11 + iSpecies, " ", &
+             write(iOutputUnit_,"(I7,A1,a,a)") 14 + iSpecies, " ", &
                   "Production Rate ",cSpecies(iSpecies)
           enddo
           do iSpecies = 1, nSpeciesTotal
-             write(iOutputUnit_,"(I7,A1,a,a)") 11 + nSpeciesTotal + iSpecies, " ", &
+             write(iOutputUnit_,"(I7,A1,a,a)") 14 + nSpeciesTotal + iSpecies, " ", &
                   "Loss Rate ",cSpecies(iSpecies)
              
           enddo
@@ -1276,7 +1290,7 @@ subroutine output_1dthm
           ChemicalHeatingRate(1,1,iiAlt)*TempUnit(1,1,iiAlt),     &
           AuroralHeating(1,1,iiAlt)*dt*TempUnit(1,1,iiAlt),       &
           JouleHeating(1,1,iiAlt)*dt*TempUnit(1,1,iiAlt),         &
-          -RadCooling(1,1,iiAlt,1)*dt*TempUnit(1,1,iiAlt),           &
+          -NOCooling(1,1,iiAlt)*dt*TempUnit(1,1,iiAlt),           &
           -OCooling(1,1,iiAlt)*dt*TempUnit(1,1,iiAlt),            &
           EuvTotal(1,1,iiAlt,1) * dt,                             &
           varsS, varsL
@@ -1987,6 +2001,97 @@ contains
   end function inter
 
 end subroutine output_1dnew
+
+!----------------------------------------------------------------
+!
+!----------------------------------------------------------------
+subroutine output_3dthn(iBlock)
+
+  use ModGITM
+  use ModInputs
+  use ModSources
+  use ModEuv, only : EuvTotal
+  implicit none
+
+  integer, intent(in) :: iBlock
+  integer :: iAlt, iLat, iLon, iiAlt, iiLat, iiLon
+
+
+  do iAlt=-1,nAlts+2
+     iiAlt = max(min(iAlt,nAlts),1)
+     do iLat=-1,nLats+2
+        iiLat = min(max(iLat,1),nLats)
+        do iLon=-1,nLons+2
+           iiLon = min(max(iLon,1),nLons)
+
+           write(iOutputUnit_)          &
+                Longitude(iLon,iBlock),               &
+                Latitude(iLat,iBlock),                &
+                Altitude_GB(iLon,iLat,iAlt,iBlock),   &
+                EuvHeating(iiLon,iiLat,iiAlt,iBlock)*dt*TempUnit(iiLon,iiLat,iiAlt)/dt,    &
+                Conduction(iiLon,iiLat,iiAlt)*TempUnit(iiLon,iiLat,iiAlt)/dt,              &
+                MoleConduction(iiLon,iiLat,iiAlt)/dt,                             &
+                EddyCond(iiLon,iiLat,iiAlt)/dt,                                   &
+                EddyCondAdia(iiLon,iiLat,iiAlt)/dt,                               &
+                ChemicalHeatingRate(iiLon,iiLat,iiAlt)*TempUnit(iiLon,iiLat,iiAlt)/dt,     &
+                AuroralHeating(iiLon,iiLat,iiAlt)*TempUnit(iiLon,iiLat,iiAlt),       &
+                JouleHeating(iiLon,iiLat,iiAlt)*TempUnit(iiLon,iiLat,iiAlt),         &
+                -NOCooling(iiLon,iiLat,iiAlt)*TempUnit(iiLon,iiLat,iiAlt),           &
+                -OCooling(iiLon,iiLat,iiAlt)*TempUnit(iiLon,iiLat,iiAlt),            &
+                EuvTotal(iiLon,iiLat,iiAlt,iBlock)
+           
+        enddo
+     enddo
+  enddo
+     
+end subroutine output_3dthn
+
+!----------------------------------------------------------------
+!
+!----------------------------------------------------------------
+
+
+subroutine output_1dthn
+
+  use ModGITM
+  use ModInputs
+  use ModSources
+  use ModEuv, only : EuvTotal
+  implicit none
+
+  integer :: iAlt, iLat, iLon, iiAlt,iSpecies
+  real    :: varsS(nSpeciesTotal),varsL(nSpeciesTotal)
+
+  
+  do iAlt=-1,nAlts+2
+     iiAlt = max(min(iAlt,nAlts),1)
+ 
+     do iSpecies = 1, nSpeciesTotal 
+        varsS(iSpecies) = NeutralSourcesTotal(iialt,iSpecies)
+        varsL(iSpecies) = NeutralLossesTotal(iialt,iSpecies)
+     enddo
+
+     write(iOutputUnit_) &
+          Longitude(1,1),               &
+          Latitude(1,1),                &
+          Altitude_GB(1,1,iAlt,1),   &
+          EuvHeating(1,1,iiAlt,1)*TempUnit(1,1,iiAlt),    &
+          Conduction(1,1,iiAlt)*TempUnit(1,1,iiAlt)/dt,              &
+          MoleConduction(1,1,iiAlt)/dt,                             &
+          EddyCond(1,1,iiAlt)/dt,                                   &
+          EddyCondAdia(1,1,iiAlt)/dt,                               &
+          ChemicalHeatingRate(1,1,iiAlt)*TempUnit(1,1,iiAlt)/dt,     &
+          AuroralHeating(1,1,iiAlt)*TempUnit(1,1,iiAlt),       &
+          JouleHeating(1,1,iiAlt)*TempUnit(1,1,iiAlt),         &
+          -NOCooling(1,1,iiAlt)*TempUnit(1,1,iiAlt),            &
+          -OCooling(1,1,iiAlt)*TempUnit(1,1,iiAlt),            &
+          EuvTotal(1,1,iiAlt,1),                             &
+          varsS, varsL
+                   
+  enddo
+
+end subroutine output_1dthn
+
 
 
 

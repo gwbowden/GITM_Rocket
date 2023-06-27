@@ -1,0 +1,12 @@
+
+module ModSizeGitm
+
+  integer, parameter :: nLons = 1
+  integer, parameter :: nLats = 1
+  integer, parameter :: nAlts = 50
+
+  integer, parameter :: nBlocksMax = 1
+
+  integer :: nBlocks
+
+end module ModSizeGitm

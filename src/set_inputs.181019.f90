@@ -973,43 +973,21 @@ subroutine set_inputs
 
            call read_in_logical(UseRocketExhaust, iError)
            call read_in_string(cRocketFile, iError)
-!!$           call read_in_real(sigmaLon, iError)
-!!$           call read_in_real(sigmaLat, iError)
-!!$           call read_in_real(sigmaAlt, iError)
-           call read_in_real(tRocket, iError)
-           call read_in_real(maxRSqND, iError)
+           call read_in_real(sigmaLon, iError)
+           call read_in_real(sigmaLat, iError)
+           call read_in_real(sigmaAlt, iError)
            if (iError /= 0) then
               write(*,*) 'Incorrect format for #ROCKETEXHAUST'
               write(*,*) ''
               write(*,*) '#ROCKETEXHAUST'
               write(*,*) "UseRocketExhaust       (logical)"
               write(*,*) "cRocketFile            (string)"
-!!$              write(*,*) "sigmaLon               (real)"
-!!$              write(*,*) "sigmaLat               (real)"
-!!$              write(*,*) "sigmaAlt               (real)"
-              write(*,*) "ExpansionTime          (real, s)"
-              write(*,*) "MaxSourceRatio         (real, /s)"
+              write(*,*) "sigmaLon               (real)"
+              write(*,*) "sigmaLat               (real)"
+              write(*,*) "sigmaAlt               (real)"
               IsDone = .true.
            else
               call read_rocket(iError)
-              if (iError /= 0) IsDone = .true.
-           endif
-
-        case ("#ACOUSTICSOURCE")
-
-           call read_in_logical(UseAcousticSource, iError)
-           call read_in_string(cAcousticFile, iError)
-           call read_in_logical(UseSoftSource, iError)
-           if (iError /= 0) then
-              write(*,*) 'Incorrect format for #ACOUSTICSOURCE'
-              write(*,*) ''
-              write(*,*) '#ACOUSTICSOURCE'
-              write(*,*) "UseAcousticSource      (logical)"
-              write(*,*) "cAcousticFile          (string)"
-              write(*,*) "UseSoftSource          (logical)"
-              IsDone = .true.
-           else
-              call read_acoustic(iError)
               if (iError /= 0) IsDone = .true.
            endif
 
